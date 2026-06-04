@@ -332,6 +332,12 @@ function clearChecked(){
 // ── QTY / NOTES ───────────────────────────────────────────
 function toggleExpand(id){
   expandedId=expandedId===String(id)?null:String(id);
+  // Pause polling while editing so re-renders don't close the input
+  if(expandedId){
+    if(pollInterval){clearInterval(pollInterval);pollInterval=null;}
+  }else{
+    if(!pollInterval)pollInterval=setInterval(fetchAll,2500);
+  }
   renderList();
 }
 
@@ -345,6 +351,8 @@ function saveItemDetails(id){
   if(idx<0)return;
   items[idx]={...items[idx],qty,notes};
   expandedId=null;
+  // Resume polling
+  if(!pollInterval)pollInterval=setInterval(fetchAll,2500);
   renderList();renderFooter();
   if(!String(id).startsWith('local_')){
     sbPatch('shopping_items',`id=eq.${id}`,{qty,notes}).catch(()=>{});
